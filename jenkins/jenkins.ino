@@ -1,4 +1,6 @@
-/* Globals - improve */
+/* A notification light with a set number of colours and different modes.
+   Controlled by serial.
+*/
 
 /* Globals - improve */
 unsigned long blinkTimer;
