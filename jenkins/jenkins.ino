@@ -1,3 +1,5 @@
+#include <Adafruit_NeoPixel.h>
+
 /* A notification light with a set number of colours and different modes.
    Controlled by serial.
 */
@@ -5,9 +7,6 @@
 /* Globals - improve */
 unsigned long blinkTimer;
 unsigned long keepAliveTimer;
-static int LED_RED = 11;
-static int LED_GREEN = 5;
-static int LED_BLUE = 9;
 int led_state;
 int command_mode = 1;
 int red = 0;
@@ -16,8 +15,9 @@ int blue = 0;
 boolean on = true;
 boolean blinking = false;
 
-#define LED_COUNT 3
 #define BAUD_RATE 9600
+#define PIXEL_PIN    11    // Digital IO pin connected to the NeoPixels.
+#define PIXEL_COUNT 1
 
 enum SerialCommands {
     // Commands to set LED lit status
@@ -33,14 +33,14 @@ enum SerialCommands {
     NO_COMMS = 0x3A,
 };
 
+Adafruit_NeoPixel pixel = Adafruit_NeoPixel(PIXEL_COUNT, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+
 void setup()
 {
     Serial.begin(BAUD_RATE);
 
     // Activate all the LEDs, blink for boot confirmation
-    pinMode(LED_RED, OUTPUT);
-    pinMode(LED_GREEN, OUTPUT);
-    pinMode(LED_BLUE, OUTPUT);
+    pixel.begin();
     setLEDs(80, 80, 80);
     delay(500);
     blinkTimer = millis();
@@ -81,15 +81,17 @@ void loop()
     
     // poll the serial buffer, execute commands
     if (Serial.available() > 0) {
-      execCommand(recvd);
+      execCommand(Serial.read());
     }
 }
 
 // Set the PWM values for the LEDs
 void setLEDs(int red, int green, int blue) {
-    analogWrite(LED_RED, 255 - red);
-    analogWrite(LED_GREEN, 255 - green);
-    analogWrite(LED_BLUE, 255 - blue);
+//    analogWrite(LED_RED, 255 - red);
+//    analogWrite(LED_GREEN, 255 - green);
+//    analogWrite(LED_BLUE, 255 - blue);
+  pixel.setPixelColor(0, pixel.Color(red,green,blue)); // First and only pixel
+  pixel.show();
 }
 
 // apply LED effects
@@ -114,8 +116,8 @@ void execCommand(int command) {
         break;
     case SET_BUILD_BROKEN:
         Serial.println("broken");
-        red = 255;
-        green = 2;
+        red = 230;
+        green = 14;
         blue = 0;
         blinking = true;
         keepAliveTimer = millis();
@@ -123,7 +125,7 @@ void execCommand(int command) {
     case SET_TESTS_FAILED:
         Serial.println("failed");
         red = 240;
-        green = 70;
+        green = 160;
         blue = 0;
         blinking = true;
         keepAliveTimer = millis();
@@ -131,16 +133,16 @@ void execCommand(int command) {
     case SET_ALL_OK:
         Serial.println("A-OK");
         red = 0;
-        green = 18;
-        blue = 100;
+        green = 20;
+        blue = 110;
         on = true;
         blinking = false;
         keepAliveTimer = millis();
         break;
     case SET_MISSING_BUILDS:
         Serial.println("missing");
-        red = 190;
-        green = 30;
+        red = 150;
+        green = 35;
         blue = 0;
         blinking = true;
         keepAliveTimer = millis();
@@ -149,9 +151,9 @@ void execCommand(int command) {
         Serial.print("told ");
     default:
         Serial.println("nothing");
-        red = 90;
+        red = 30;
         green = 0;
-        blue = 110;
+        blue = 70;
         on = true;
         blinking = false;
         break;
